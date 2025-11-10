@@ -1,3 +1,6 @@
+import java.awt.*;
+import java.io.IOException;
+import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Map;
@@ -11,7 +14,6 @@ public class LinkShortener {
     private ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
     public LinkShortener() {
-        // Запуск задачи по удалению просроченных ссылок
         scheduler.scheduleAtFixedRate(this::removeExpiredLinks, 0, 1, TimeUnit.MINUTES);
     }
 
@@ -26,13 +28,13 @@ public class LinkShortener {
         return UUID.randomUUID().toString().substring(0, 8);
     }
 
-    public void redirect(String shortUrl) throws URISyntaxException {
+    public void redirect(String shortUrl) throws URISyntaxException, IOException {
         Link link = links.get(shortUrl);
         if (link != null && link.isActive()) {
             link.incrementClickCount();
             // Перенаправление на длинный URL
             System.out.println("Перенаправление на: " + link.getLongUrl());
-            // Здесь можно использовать Desktop.getDesktop().browse(new URI(link.getLongUrl()));
+            Desktop.getDesktop().browse(new URI("https://ru.stackoverflow.com"));
         } else {
             System.out.println("Ссылка недоступна или истекла.");
         }
@@ -43,19 +45,16 @@ public class LinkShortener {
         System.out.println("Удалены просроченные ссылки.");
     }
 
-    public static void main(String[] args) throws URISyntaxException {
+    public static void main(String[] args) throws URISyntaxException, IOException {
         LinkShortener shortener = new LinkShortener();
 
-        // Пример использования
         String shortLink = shortener.shortenLink("https://ru.stackoverflow.com", "user123", 5, 60);
         System.out.println("Сокращенная ссылка: " + shortLink);
 
-        // Тестирование редиректа
-        for (int i = 0; i < 6; i++) { // Попробуем перейти 6 раз
+        for (int i = 0; i < 6; i++) {
             shortener.redirect(shortLink);
         }
 
-        // Ждем 61 секунду для проверки истечения срока действия
         try {
             Thread.sleep(61000);
         } catch (InterruptedException e) {
